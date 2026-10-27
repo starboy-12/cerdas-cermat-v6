@@ -1,0 +1,63 @@
+{
+  "progress": {},
+  "attempts": {},
+  "readingProgress": {},
+  "users": {
+    "user-dev-satrio": {
+      "id": "user-dev-satrio",
+      "email": "satriosimputra21@gmail.com",
+      "name": "Satrio S Utomo (Developer)",
+      "role": "admin",
+      "salt": "fdc38ec7bbc1596dd0424e0a087bd80d",
+      "passwordHash": "177d757ab91cd86e3ba79ab5d0e7b4c0d1b664e7f72d764074bb4a3c42c37752dc74515e8815ca71d605a4b4a50e71a948aeae9f6f9ba75fba9f9d38a87a0e50",
+      "createdAt": "2026-10-27T01:33:30.307Z"
+    },
+    "user-demo-tk": {
+      "id": "user-demo-tk",
+      "email": "siswa.tk@cerdas.id",
+      "name": "Budi Kecil (Siswa TK)",
+      "role": "student_tk",
+      "salt": "14687390296f20cb5e49716f80e8522a",
+      "passwordHash": "dc1f372b629e0dfa68b21b8ec400e4a3e1a060786b1fa82d4b1ce9f3470814829b209cf0bf9ccd756fd70ce65d65573ebb7ecf4ab03f16d774dd04f4f35f31d9",
+      "createdAt": "2026-10-27T01:45:46.379Z"
+    },
+    "user-demo-sd": {
+      "id": "user-demo-sd",
+      "email": "siswa.sd@cerdas.id",
+      "name": "Ahmad Santoso (Siswa SD)",
+      "role": "student_sd",
+      "salt": "3aebf6c9c1a18b9c99815d234d446b7b",
+      "passwordHash": "42322900d7b7a118bd4e6716400d5d7486fb561d0236e33d920be1ae5dc2ff8529b118cd5608a8ce3ac0c42e6d3141e419df5dfe325dc7d79e71acb156730de1",
+      "createdAt": "2026-10-27T01:45:46.459Z"
+    },
+    "user-demo-smp": {
+      "id": "user-demo-smp",
+      "email": "siswa.smp@cerdas.id",
+      "name": "Rina Kusuma (Siswa SMP)",
+      "role": "student_smp",
+      "salt": "7cd0b15485ed9ae8f95a8269e435aaf7",
+      "passwordHash": "a4a5893fbb9a053ace6bd4f5c03e0aa727505978cdf139a60179695b81d08003175626b1269e5caa1ce5601aeeeb73a7a946ecec8bf1e9dec5b5725f9f9dc115",
+      "createdAt": "2026-10-27T01:45:46.507Z"
+    },
+    "user-demo-sma": {
+      "id": "user-demo-sma",
+      "email": "siswa.sma@cerdas.id",
+      "name": "Dimas Pratama (Siswa SMA)",
+      "role": "student_sma",
+      "salt": "841d5b62da7618dd46cf28013ea0ad63",
+      "passwordHash": "17a9a53a03e60aea36b1fff514f8ba5f67a1fe8a458eb124ba05d36c2c4387b4689c6b066d8fb92c706ff4e8af0808a5aa880d8d4e62a54a467827062520f3de",
+      "createdAt": "2026-10-27T01:45:46.554Z"
+    },
+    "user-demo-guru": {
+      "id": "user-demo-guru",
+      "email": "guru@cerdas.id",
+      "name": "Ibu Nurul Hidayah, S.Pd (Guru)",
+      "role": "teacher",
+      "salt": "d7dc7b727b13e8fb01c689a0c6433741",
+      "passwordHash": "3997134d8865b002fc005dbe0476f8ba205c46ab3704224b653c4366cb13f9737166012102dd8ef8d12c9193f6fb246c79dda50939d69ecb8780c14de820a416",
+      "createdAt": "2026-10-27T01:45:46.600Z"
+    }
+  },
+  "classes": {},
+  "bankQuestions": []
+}

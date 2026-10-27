@@ -1,0 +1,17 @@
+{
+  "test-q-1:1": {
+    "cached": false,
+    "explanation": "1. Mari amati kembali soal: \"Berapakah 2 + 2?\"\n\n2. Analisis pilihan: Kamu memilih \"3\". Pilihan ini belum tepat karena konsep utama pada materi Matematika berfokus pada pemahaman langkah dasar.\n\n3. Kunci jawaban yang tepat adalah \"4\". 2 ditambah 2 adalah 4.\n\n4. Tips Cerdas: Selalu periksa kembali kata kunci pada soal sebelum menentukan pilihan!",
+    "similarQuestion": {
+      "prompt": "Latihan Serupa (Matematika - SD): Perhatikan konsep di atas. Jika kondisi serupa terjadi, langkah pertama yang paling bijak adalah...",
+      "choices": [
+        "Menganalisis hubungan antara fakta dan konsep utama",
+        "Memilih jawaban secara acak tanpa membaca soal",
+        "Mengabaikan instruksi yang tertulis",
+        "Menebak tanpa memeriksa petunjuk yang diberikan"
+      ],
+      "answer": 0,
+      "explanation": "Langkah yang tepat adalah menganalisis hubungan konsep utama secara saksama."
+    }
+  }
+}
