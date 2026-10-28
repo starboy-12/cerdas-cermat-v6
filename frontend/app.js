@@ -1127,11 +1127,6 @@ function openAccountDialog() {
   const forgotRow = $('#account-password-wrapper');
   if (forgotRow) forgotRow.hidden = signedIn || isRegister;
 
-  const quickAccess = $('#auth-quick-access');
-  if (quickAccess) quickAccess.hidden = signedIn || isRegister;
-  const orManualDivider = $('#auth-or-manual-divider');
-  if (orManualDivider) orManualDivider.hidden = signedIn || isRegister;
-
   $('#google-login-section').hidden = signedIn;
   $('#account-auth-divider').hidden = signedIn;
   $('#account-mode-toggle').hidden = signedIn;
@@ -1815,6 +1810,13 @@ bookGrid.addEventListener('click', (event) => {
   if (card.disabled || card.getAttribute('aria-disabled') === 'true') {
     event.preventDefault();
     event.stopPropagation();
+    // Efek getar penolakan akses (tactile lock shake feedback)
+    try { navigator.vibrate?.([40, 50, 40]); } catch {}
+    card.classList.remove('is-book-locked-shake');
+    void card.offsetWidth;
+    card.classList.add('is-book-locked-shake');
+    setTimeout(() => card.classList.remove('is-book-locked-shake'), 450);
+
     const userRole = state.account?.role;
     const userRoleText = roleLabel(userRole);
     const targetBook = state.books.find((item) => item.id === bookId);
@@ -1822,7 +1824,18 @@ bookGrid.addEventListener('click', (event) => {
     showToast(`🔒 Akses Ditolak: Anda masuk sebagai ${userRoleText}. Interaksi buku jenjang ${targetLevelName} dinonaktifkan karena tidak sesuai dengan peran Anda.`);
     return;
   }
-  openCatalog(bookId);
+
+  // Efek animasi membalik halaman pertama, getar taktil & buka sampul 3D sebelum membuka dialog
+  try { navigator.vibrate?.([30, 25, 45]); } catch {}
+  card.classList.add('is-book-opening');
+
+  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const delay = prefersReduced ? 0 : 380;
+
+  setTimeout(() => {
+    card.classList.remove('is-book-opening');
+    openCatalog(bookId);
+  }, delay);
 });
 
 $('#start-book').addEventListener('click', () => openBook());
@@ -1931,16 +1944,7 @@ $('#auth-tab-register')?.addEventListener('click', () => {
     openAccountDialog();
   }
 });
-$('#account-password-toggle')?.addEventListener('click', () => {
-  const input = $('#account-password');
-  const toggleBtn = $('#account-password-toggle');
-  if (!input) return;
-  const isPassword = input.type === 'password';
-  input.type = isPassword ? 'text' : 'password';
-  toggleBtn?.setAttribute('aria-label', isPassword ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi');
-  toggleBtn?.querySelector('.eye-show')?.toggleAttribute('hidden', isPassword);
-  toggleBtn?.querySelector('.eye-hide')?.toggleAttribute('hidden', !isPassword);
-});
+
 $('#account-picker-back')?.addEventListener('click', () => {
   const pickerEl = $('#account-picker');
   if (pickerEl) pickerEl.hidden = true;
@@ -1965,13 +1969,7 @@ $('#account-role').addEventListener('change', () => {
 $('#account-form').addEventListener('submit', submitAccount);
 $('#account-logout').addEventListener('click', logoutAccount);
 $('#account-dialog').addEventListener('click', (event) => { if (event.target === $('#account-dialog')) closeAccountDialog(); });
-$('#dev-quick-login-btn')?.addEventListener('click', quickDevLogin);
-document.querySelectorAll('.demo-role-btn').forEach((btn) => {
-  btn.addEventListener('click', () => {
-    const role = btn.dataset.demoRole;
-    if (role) void loginDemoRole(role);
-  });
-});
+
 
 // Reset Password Dialog Event Listeners
 $('#account-forgot-link')?.addEventListener('click', openResetPasswordDialog);

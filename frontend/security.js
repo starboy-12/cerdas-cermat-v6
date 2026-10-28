@@ -77,26 +77,7 @@
     }
   }, { capture: true });
 
-  // 4. Console Cyber Security Shield Notice Banner
-  try {
-    const bannerStyle = 'color: #315c36; font-family: monospace; font-size: 11px; font-weight: bold; line-height: 1.45;';
-    console.log(
-      '%c' +
-      '╔═══════════════════════════════════════════════════════════════════════════════════════════╗\n' +
-      '║                    🛡️ CERDAS CERMAT CYBER SECURITY LEVEL 5 — AKTIF 🛡️                     ║\n' +
-      '║                                                                                           ║\n' +
-      '║  Sistem Perlindungan Multi-Lapis Level 5 Beroperasi Penuh:                                ║\n' +
-      '║  • Anti-Code-Theft & Pelindung Integritas Aplikasi (Anti-Tamper) Aktif                    ║\n' +
-      '║  • Anti-Scraping Bank Soal & Materi Kurikulum Terenkripsi                                 ║\n' +
-      '║  • Kontrol Akses Berbasis Peran Ketat (RBAC) Sesuai Jenjang (TK, SD, SMP, SMA, & Guru)    ║\n' +
-      '║  • Web Application Firewall (WAF Level 5) & Pertahanan Brute-Force Aktif                  ║\n' +
-      '║  Peringatan: Setiap upaya inspeksi ilegal, scraping, atau rekayasa balik dimonitor!       ║\n' +
-      '╚═══════════════════════════════════════════════════════════════════════════════════════════╝',
-      bannerStyle
-    );
-  } catch {}
-
-  // 5. Freeze Configuration to Prevent Console Tampering
+  // 4. Freeze Configuration to Prevent Console Tampering
   if (window.CERDAS_CONFIG) {
     try { Object.freeze(window.CERDAS_CONFIG); } catch {}
   }

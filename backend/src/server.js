@@ -144,8 +144,7 @@ async function loadStore() {
       store = { progress: parsed.progress || {}, attempts: parsed.attempts || {}, readingProgress: parsed.readingProgress || {}, users: parsed.users || {}, classes: parsed.classes || {}, bankQuestions: parsed.bankQuestions || [] };
       storeBaseline = JSON.parse(JSON.stringify(store));
       return;
-    } catch (err) {
-      console.warn('[AI Studio] PostgreSQL tidak dapat digunakan, menggunakan penyimpanan lokal JSON:', err.message);
+    } catch {
       databasePool = null;
     }
   }
@@ -784,8 +783,6 @@ async function handleApi(req, res, url, user) {
       expiresAt: Date.now() + 10 * 60 * 1000,
       attempts: 0,
     });
-
-    console.log(`[AUTH OTP] Kode reset kata sandi untuk ${email}: ${otp}`);
 
     sendJson(res, 200, {
       sent: true,
@@ -1768,7 +1765,6 @@ async function handleApi(req, res, url, user) {
       });
       sendJson(res, 200, tutorResult);
     } catch (err) {
-      console.warn('[AI Tutor Endpoint Error]', err.message);
       sendJson(res, 500, { error: 'Gagal memanggil Tutor AI: ' + err.message });
     }
     return;
@@ -2316,8 +2312,8 @@ wss.on('connection', (ws, request) => {
         broadcastToRoom(room, 'student_left', { studentId, leaderboard: roomView(room).leaderboard });
       }
     });
-  } catch (err) {
-    console.warn('[WS Connection Error]', err.message);
+  } catch {
+    // Abaikan kegagalan inisialisasi WebSocket koneksi klien
   }
 });
 
@@ -2408,11 +2404,6 @@ async function start() {
   await seedAdmin();
   await seedDeveloper();
   await seedDemoAccounts();
-  if (process.env.NODE_ENV === 'production') {
-    if (!process.env.DATABASE_URL) console.warn('[AI Studio] DATABASE_URL tidak dikonfigurasi, menggunakan penyimpanan lokal JSON.');
-    if (process.env.TRUST_PROXY_TLS !== '1') console.warn('[AI Studio] TRUST_PROXY_TLS tidak aktif.');
-    if (allowedOrigins.length && !allowedOrigins.some((origin) => !origin.startsWith('https://'))) console.warn('[AI Studio] CORS_ORIGIN production.');
-  }
   const host = process.env.HOST || '0.0.0.0';
   server.listen(port, host, () => console.log(JSON.stringify({ level: 'info', event: 'service_started', service: 'cerdas-cermat-app', host, port, storage: databasePool ? 'postgres' : 'json-local' })));
 }

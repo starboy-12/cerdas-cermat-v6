@@ -93,8 +93,8 @@
         pill.hidden = false;
         pill.title = `Streak: ${profile.streak || 0} | Total Dijawab: ${profile.totalAnswered || 0}`;
       }
-    } catch (err) {
-      console.warn('Failed to load adaptive profile:', err);
+    } catch {
+      // Profil adaptif dilewati jika tamu anonim atau offline
     }
   }
 
@@ -632,8 +632,8 @@
           `;
         }).join('');
       }
-    } catch (err) {
-      console.warn('Failed to load mastery map:', err);
+    } catch {
+      // Peta penguasaan dilewati jika belum ada data aktivitas
     }
   }
 
@@ -695,18 +695,12 @@
       try {
         const payload = JSON.parse(event.data);
         handleLiveWsEvent(payload);
-      } catch (err) {
-        console.warn('WS message error:', err);
-      }
+      } catch {}
     };
 
-    liveWs.onerror = () => {
-      console.warn('WebSocket error on live room');
-    };
+    liveWs.onerror = () => {};
 
-    liveWs.onclose = () => {
-      console.log('Live WS closed');
-    };
+    liveWs.onclose = () => {};
   }
 
   function handleLiveWsEvent(msg) {

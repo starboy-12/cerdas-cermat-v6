@@ -30,8 +30,8 @@ async function persistAiCache() {
     const obj = Object.fromEntries(aiCache.entries());
     await fs.mkdir(path.dirname(cacheFilePath), { recursive: true });
     await fs.writeFile(cacheFilePath, JSON.stringify(obj, null, 2), 'utf8');
-  } catch (err) {
-    console.warn('[AI Tutor] Gagal menyimpan cache:', err.message);
+  } catch {
+    // Abaikan kegagalan persistensi cache secara graceful
   }
 }
 
@@ -143,8 +143,7 @@ Pembahasan bawaan: ${explanation || '-'}`;
     aiCache.set(cacheKey, result);
     void persistAiCache();
     return result;
-  } catch (err) {
-    console.warn('[AI Tutor] Gemini API error, menggunakan fallback:', err.message);
+  } catch {
     const fallback = generatePedagogicalFallback({ prompt, choices, answer, explanation }, choice, subject, level);
     aiCache.set(cacheKey, fallback);
     void persistAiCache();
