@@ -304,5 +304,65 @@
   display: none !important;
 }
 
+/* --- Penataan Rapi di Tengah untuk Buku di Rak (#rak #book-grid .book-3d) --- */
+.book-grid {
+  justify-items: center;
+}
+
+.book-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  text-align: center;
+}
+
+.book-card:not(.is-book-opening) .book-3d {
+  transform: none !important;
+}
+
+.book-card .book-3d {
+  margin-left: auto;
+  margin-right: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  box-shadow: 0 8px 22px -3px rgba(26, 36, 24, 0.17), 0 3px 8px -1px rgba(26, 36, 24, 0.09), 0 1px 3px rgba(26, 36, 24, 0.05);
+  transition: box-shadow 0.3s ease;
+}
+
+.book-card:not(.is-role-locked):not(.is-book-opening):hover .book-3d {
+  transform: none !important;
+  box-shadow: 0 10px 24px -2px rgba(22, 34, 20, 0.22), 0 3px 8px rgba(22, 34, 20, 0.1);
+  filter: none;
+}
+
+.book-card:not(.is-role-locked):not(.is-book-opening):active .book-3d {
+  transform: none !important;
+}
+
+.book-3d .book-crest,
+.book-3d .book-overline,
+.book-3d .book-name,
+.book-3d .book-rule,
+.book-3d .book-level,
+.book-3d .book-motto {
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}
+
+.book-card-label {
+  position: absolute;
+  bottom: -24px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  width: 100%;
+}
+
+
 
 
