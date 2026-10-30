@@ -6,8 +6,8 @@
   "scripts": {
     "dev": "node server.js",
     "start": "node server.js",
-    "build": "npm run lint",
-    "lint": "node --check server.js && node --check backend/src/server.js && node --check backend/src/sm2.js && node --check backend/src/ai-tutor.js && node --check backend/src/adaptive.js && node --check backend/src/live-classroom.js && node --check frontend/app.js && node --check frontend/pillars.js && node --check frontend/security.js && node --check frontend/config.js && node --check frontend/ui-components.js",
+    "build": "node scripts/build.js && npm run lint",
+    "lint": "node --check server.js && node --check api/index.js && node --check backend/src/server.js && node --check backend/src/sm2.js && node --check backend/src/ai-tutor.js && node --check backend/src/adaptive.js && node --check backend/src/live-classroom.js && node --check frontend/app.js && node --check frontend/pillars.js && node --check frontend/security.js && node --check frontend/config.js && node --check frontend/ui-components.js",
     "test": "node --test backend/test/*.test.js"
   },
   "dependencies": {

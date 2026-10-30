@@ -17,16 +17,28 @@ function createContentStore(filePath) {
       schools = parsed && typeof parsed.schools === 'object' && parsed.schools ? parsed.schools : {};
       media = parsed && typeof parsed.media === 'object' && parsed.media ? parsed.media : {};
     } catch (error) {
+      if (process.env.VERCEL) {
+        try {
+          const fallbackPath = path.resolve(__dirname, '../data/content.json');
+          const parsed = JSON.parse(await fs.readFile(fallbackPath, 'utf8'));
+          contents = parsed && typeof parsed.contents === 'object' && parsed.contents ? parsed.contents : {};
+          schools = parsed && typeof parsed.schools === 'object' && parsed.schools ? parsed.schools : {};
+          media = parsed && typeof parsed.media === 'object' && parsed.media ? parsed.media : {};
+          return;
+        } catch {}
+      }
       if (error.code !== 'ENOENT') throw error;
     }
   }
 
   function persist() {
     queue = queue.catch(() => {}).then(async () => {
-      await fs.mkdir(path.dirname(filePath), { recursive: true });
-      const temp = `${filePath}.${process.pid}.tmp`;
-      await fs.writeFile(temp, JSON.stringify({ contents, schools, media }, null, 2), 'utf8');
-      await fs.rename(temp, filePath);
+      try {
+        await fs.mkdir(path.dirname(filePath), { recursive: true });
+        const temp = `${filePath}.${process.pid}.tmp`;
+        await fs.writeFile(temp, JSON.stringify({ contents, schools, media }, null, 2), 'utf8');
+        await fs.rename(temp, filePath);
+      } catch {}
     });
     return queue;
   }

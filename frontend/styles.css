@@ -304,9 +304,20 @@
   display: none !important;
 }
 
-/* --- Penataan Rapi di Tengah untuk Buku di Rak (#rak #book-grid .book-3d) --- */
+/* --- Penataan Proporsional Kotak Buku di Rak (#rak #book-grid .book-3d) --- */
+#book-grid,
 .book-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 24px;
+  position: relative;
+  z-index: 2;
+  min-height: auto;
+  padding: 16px 2% 0;
+  margin-bottom: 0;
   justify-items: center;
+  align-items: end;
+  overflow: visible;
 }
 
 .book-card {
@@ -315,52 +326,234 @@
   align-items: center;
   justify-content: flex-end;
   text-align: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  overflow: visible;
+  width: 100%;
+  max-width: 220px;
+  height: auto;
+  min-height: 0;
+  padding: 8px 6px 0;
+  margin: 0;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
-.book-card:not(.is-book-opening) .book-3d {
-  transform: none !important;
+.book-card:not(.is-book-opening):not(:hover) .book-3d {
+  transform: none;
 }
 
+/* Ukuran buku proporsional kotak (seperti buku biasa, tidak memanjang) */
 .book-card .book-3d {
-  margin-left: auto;
-  margin-right: auto;
+  width: 176px;
+  max-width: 90%;
+  height: 190px;
+  aspect-ratio: 1 / 1.08;
+  border-radius: 4px 7px 7px 2px;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   text-align: center;
-  box-shadow: 0 8px 22px -3px rgba(26, 36, 24, 0.17), 0 3px 8px -1px rgba(26, 36, 24, 0.09), 0 1px 3px rgba(26, 36, 24, 0.05);
-  transition: box-shadow 0.3s ease;
+  transform-origin: center bottom;
+  box-shadow: 0 10px 22px -3px rgba(26, 36, 24, 0.2), 0 3px 8px -1px rgba(26, 36, 24, 0.1), 0 1px 3px rgba(26, 36, 24, 0.05);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, box-shadow;
+  padding: 12px 14px 10px;
+  box-sizing: border-box;
+  overflow: visible;
+  position: relative;
 }
 
 .book-card:not(.is-role-locked):not(.is-book-opening):hover .book-3d {
-  transform: none !important;
-  box-shadow: 0 10px 24px -2px rgba(22, 34, 20, 0.22), 0 3px 8px rgba(22, 34, 20, 0.1);
-  filter: none;
+  transform: scale(1.03) translateY(-4px) !important;
+  box-shadow: 0 18px 34px -4px rgba(22, 34, 20, 0.24), 0 6px 14px -2px rgba(22, 34, 20, 0.12), 0 2px 4px rgba(22, 34, 20, 0.06);
 }
 
 .book-card:not(.is-role-locked):not(.is-book-opening):active .book-3d {
-  transform: none !important;
+  transform: scale(1.01) !important;
+  box-shadow: 0 10px 22px -3px rgba(22, 34, 20, 0.18), 0 4px 10px -1px rgba(22, 34, 20, 0.1);
+  transition-duration: 0.15s;
 }
 
-.book-3d .book-crest,
-.book-3d .book-overline,
-.book-3d .book-name,
-.book-3d .book-rule,
-.book-3d .book-level,
-.book-3d .book-motto {
-  margin-left: auto;
-  margin-right: auto;
+/* Elemen dalam buku agar proporsional pas dan tidak terpotong */
+.book-3d .book-crest {
+  font-size: 15px;
+  line-height: 1;
+  margin: 0 auto;
+  display: block;
+}
+
+.book-3d .book-overline {
+  font-family: var(--serif);
+  font-size: 6.5px;
+  letter-spacing: 1.1px;
+  margin: 2px auto 0;
+  line-height: 1.2;
+  opacity: 0.85;
+  display: block;
+}
+
+.book-3d .book-name {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 17px;
+  line-height: 1.12;
+  margin: 2px auto 1px;
   text-align: center;
+  display: block;
 }
 
-.book-card-label {
+.book-3d .book-rule {
+  width: 32px;
+  height: 1.5px;
+  background: var(--book-accent);
+  opacity: 0.8;
+  margin: 3px auto 2px;
+  display: block;
+  border-radius: 1px;
+}
+
+.book-3d .book-level {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 24px;
+  line-height: 1;
+  margin: 0 auto;
+  display: block;
+}
+
+.book-3d .book-motto {
+  font-size: 6px;
+  letter-spacing: 0.4px;
+  line-height: 1.25;
+  margin: 2px auto 0;
+  text-align: center;
+  opacity: 0.88;
+  max-width: 144px;
+  white-space: normal;
+  word-break: break-word;
+  display: block;
+}
+
+.book-3d .book-spine-title {
   position: absolute;
-  bottom: -24px;
-  left: 0;
-  right: 0;
+  left: -8px;
+  top: 16px;
+  bottom: 16px;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-family: var(--serif);
+  font-size: 7px;
+  letter-spacing: 1px;
+  opacity: 0.85;
+}
+
+.book-3d:after {
+  content: '';
+  position: absolute;
+  inset: 7px 7px;
+  border: 1px solid color-mix(in srgb, var(--book-accent), transparent 48%);
+  pointer-events: none;
+  border-radius: 2px 4px 4px 1px;
+}
+
+/* Label keterangan buku diletakkan rapi di bawah buku dan tidak terpotong */
+.book-card-label {
+  display: block;
+  position: static;
+  margin-top: 10px;
   text-align: center;
   width: 100%;
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  color: #55584e;
+  line-height: 1.35;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: rgba(44, 47, 40, 0.06);
+  white-space: normal;
+  word-break: break-word;
+  box-sizing: border-box;
+  overflow: visible;
+}
+
+/* Badge penyesuaian peran di atas buku */
+.role-lock-badge,
+.role-match-badge {
+  top: -8px;
+  z-index: 10;
+}
+
+/* Rak kayu di bawah deretan buku */
+.shelf {
+  height: 30px;
+  position: relative;
+  margin-top: 14px;
+  z-index: 1;
+}
+
+/* Responsif pada layar sedang dan mobile */
+@media (max-width: 900px) {
+  #book-grid,
+  .book-grid {
+    gap: 16px;
+    padding: 16px 2% 0;
+  }
+  .book-card .book-3d {
+    width: 160px;
+    height: 175px;
+    padding: 10px 10px 8px;
+  }
+  .book-3d .book-name {
+    font-size: 15px;
+  }
+  .book-3d .book-level {
+    font-size: 22px;
+  }
+}
+
+@media (max-width: 650px) {
+  #book-grid,
+  .book-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    row-gap: 28px;
+    column-gap: 14px;
+    padding: 12px 2% 0;
+  }
+  .book-card {
+    max-width: 170px;
+    padding: 4px 4px 0;
+  }
+  .book-card .book-3d {
+    width: 140px;
+    height: 154px;
+    padding: 8px 8px 6px;
+  }
+  .book-3d .book-crest {
+    font-size: 13px;
+  }
+  .book-3d .book-name {
+    font-size: 13.5px;
+    margin-top: 1px;
+  }
+  .book-3d .book-level {
+    font-size: 19px;
+  }
+  .book-3d .book-motto {
+    font-size: 5.5px;
+    max-width: 118px;
+  }
+  .book-card-label {
+    font-size: 8.5px;
+    padding: 2px 5px;
+    margin-top: 8px;
+  }
 }
 
 

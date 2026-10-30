@@ -18,16 +18,32 @@ const { BADGE_DEFINITIONS, getPlacementQuestions, evaluatePlacementTest } = requ
 const { createRoom, getRoom, roomView, joinStudent, submitAnswer, nextQuestion, showReview, broadcastToRoom } = require('./live-classroom');
 
 const port = Number(process.env.PORT || process.env.APP_PORT || 3000);
-const storePath = path.resolve(process.env.PROGRESS_FILE || path.resolve(__dirname, '../data/progress.json'));
+function resolveStorePath() {
+  if (process.env.PROGRESS_FILE) return path.resolve(process.env.PROGRESS_FILE);
+  if (process.env.VERCEL) return path.resolve('/tmp/progress.json');
+  const candidates = [
+    path.resolve(__dirname, '../../data/progress.json'),
+    path.resolve(process.cwd(), 'data/progress.json'),
+    path.resolve(__dirname, '../data/progress.json'),
+  ];
+  for (const c of candidates) {
+    if (require('node:fs').existsSync(c)) return c;
+  }
+  return candidates[0];
+}
+const storePath = resolveStorePath();
 const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:5174,http://127.0.0.1:5174').split(',').map((origin) => origin.trim());
-let store = { progress: {}, attempts: {}, readingProgress: {}, users: {}, classes: {}, bankQuestions: [] };
+let store = { progress: {}, attempts: {}, readingProgress: {}, users: {}, classes: {}, bankQuestions: [], sessions: {} };
 let writeQueue = Promise.resolve();
 let databasePool = null;
 let storeBaseline = null;
 const sessions = new Map();
 const otpStore = new Map();
 const googleOAuthClient = new OAuth2Client();
-const contentStore = createContentStore(path.resolve(process.env.CONTENT_FILE || path.resolve(__dirname, '../data/content.json')));
+const defaultContentPath = process.env.VERCEL
+  ? path.resolve('/tmp/content.json')
+  : path.resolve(__dirname, '../data/content.json');
+const contentStore = createContentStore(path.resolve(process.env.CONTENT_FILE || defaultContentPath));
 const rateWindows = new Map();
 const metrics = { requests: 0, errors: 0, rateLimited: 0, storageErrors: 0, responses: { '2xx': 0, '4xx': 0, '5xx': 0 }, latencyBucketsMs: { le100: 0, le500: 0, le1000: 0, gt1000: 0 }, startedAt: Date.now() };
 const MAX_BODY_BYTES = Number(process.env.MAX_BODY_BYTES || 1_000_000);
@@ -150,9 +166,33 @@ async function loadStore() {
   }
   try {
     const parsed = JSON.parse(await fs.readFile(storePath, 'utf8'));
-    store = { progress: parsed.progress || {}, attempts: parsed.attempts || {}, readingProgress: parsed.readingProgress || {}, users: parsed.users || {}, classes: parsed.classes || {}, bankQuestions: parsed.bankQuestions || [] };
+    store = { progress: parsed.progress || {}, attempts: parsed.attempts || {}, readingProgress: parsed.readingProgress || {}, users: parsed.users || {}, classes: parsed.classes || {}, bankQuestions: parsed.bankQuestions || [], sessions: parsed.sessions || {} };
+    if (store.sessions) {
+      for (const [t, s] of Object.entries(store.sessions)) {
+        if (s && s.expiresAt > Date.now()) {
+          sessions.set(t, s);
+        }
+      }
+    }
     storeBaseline = JSON.parse(JSON.stringify(store));
   } catch (error) {
+    if (process.env.VERCEL) {
+      try {
+        const seedCandidates = [
+          path.resolve(__dirname, '../../data/progress.json'),
+          path.resolve(process.cwd(), 'data/progress.json'),
+          path.resolve(__dirname, '../data/progress.json'),
+        ];
+        for (const seedPath of seedCandidates) {
+          try {
+            const parsed = JSON.parse(await fs.readFile(seedPath, 'utf8'));
+            store = { progress: parsed.progress || {}, attempts: parsed.attempts || {}, readingProgress: parsed.readingProgress || {}, users: parsed.users || {}, classes: parsed.classes || {}, bankQuestions: parsed.bankQuestions || [], sessions: parsed.sessions || {} };
+            storeBaseline = JSON.parse(JSON.stringify(store));
+            return;
+          } catch {}
+        }
+      } catch {}
+    }
     if (error.code !== 'ENOENT') console.error('Tidak dapat membaca progres tersimpan:', error.message);
   }
 }
@@ -178,11 +218,16 @@ function persistStore() {
       } finally { client.release(); }
       return;
     }
-    await fs.mkdir(path.dirname(storePath), { recursive: true });
-    const temporaryPath = `${storePath}.tmp`;
-    const snapshot = JSON.stringify(store, null, 2);
-    await fs.writeFile(temporaryPath, snapshot, 'utf8');
-    await fs.rename(temporaryPath, storePath);
+    try {
+      await fs.mkdir(path.dirname(storePath), { recursive: true });
+      const temporaryPath = `${storePath}.tmp`;
+      const snapshot = JSON.stringify(store, null, 2);
+      await fs.writeFile(temporaryPath, snapshot, 'utf8');
+      await fs.rename(temporaryPath, storePath);
+      storeBaseline = JSON.parse(JSON.stringify(store));
+    } catch {
+      // Tolerate read-only filesystem gracefully on serverless edge
+    }
   });
   writeQueue.catch(() => { metrics.storageErrors += 1; });
   return writeQueue;
@@ -263,8 +308,19 @@ function getProgress(studentId, bookId, curriculum, phase, subjectId = 'matemati
 
 function authUser(req) {
   const match = String(req.headers.authorization || '').match(/^Bearer ([A-Za-z0-9_-]+)$/);
-  const session = match && sessions.get(match[1]);
-  if (session && session.expiresAt <= Date.now()) { sessions.delete(match[1]); return null; }
+  if (!match) return null;
+  const token = match[1];
+  let session = sessions.get(token);
+  if (!session && store.sessions && store.sessions[token]) {
+    session = store.sessions[token];
+    sessions.set(token, session);
+  }
+  if (session && session.expiresAt <= Date.now()) {
+    sessions.delete(token);
+    if (store.sessions) delete store.sessions[token];
+    void persistStore();
+    return null;
+  }
   return session ? store.users[session.userId] || null : null;
 }
 
@@ -402,16 +458,20 @@ function verifyPassword(password, user) {
 
 function issueSession(user) {
   const token = crypto.randomBytes(32).toString('base64url');
-  sessions.set(token, { userId: user.id, expiresAt: Date.now() + 12 * 60 * 60 * 1000 });
+  const sessionData = { userId: user.id, email: user.email, expiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000 };
+  sessions.set(token, sessionData);
+  store.sessions = store.sessions || {};
+  store.sessions[token] = sessionData;
+  void persistStore();
   return { token, user: safeUser(user) };
 }
 
 function rateLimitKey(req) {
-  const forwarded = req.headers['x-forwarded-for'];
+  const forwarded = req.headers?.['x-forwarded-for'];
   if (typeof forwarded === 'string' && forwarded.trim()) {
     return forwarded.split(',')[0].trim();
   }
-  return req.socket.remoteAddress || 'unknown';
+  return req.socket?.remoteAddress || req.connection?.remoteAddress || 'unknown';
 }
 
 function rateAllowed(req) {
@@ -644,8 +704,8 @@ async function handleApi(req, res, url, user) {
       return;
     }
 
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254 || !name || name.length > 80 || typeof password !== 'string' || password.length < 10 || password.length > 200) {
-      sendJson(res, 400, { error: 'Email, nama, atau kata sandi tidak memenuhi ketentuan (kata sandi minimal 10 karakter).' }); return;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254 || !name || name.length > 80 || typeof password !== 'string' || password.length < 6 || password.length > 200) {
+      sendJson(res, 400, { error: 'Email, nama, atau kata sandi tidak memenuhi ketentuan (kata sandi minimal 6 karakter).' }); return;
     }
 
     const existingAccounts = Object.values(store.users).filter((entry) => entry.email === email);
@@ -705,13 +765,17 @@ async function handleApi(req, res, url, user) {
       return;
     }
 
-    const existingAccounts = Object.values(store.users).filter((entry) => entry.email === email);
+    const existingAccounts = Object.values(store.users).filter((entry) => {
+      if (entry.email === email) return true;
+      if (entry.name && entry.name.toLowerCase() === email) return true;
+      return false;
+    });
 
     // Jika pengguna memilih ID akun spesifik dari daftar profil
     if (accountId) {
-      const selectedAccount = existingAccounts.find((acc) => acc.id === accountId);
+      const selectedAccount = existingAccounts.find((acc) => acc.id === accountId) || store.users[accountId];
       if (!selectedAccount) {
-        sendJson(res, 404, { error: 'Akun yang dipilih tidak ditemukan pada email ini.' });
+        sendJson(res, 404, { error: 'Akun yang dipilih tidak ditemukan.' });
         return;
       }
       const isMatch = verifyPassword(password, selectedAccount) || (selectedAccount.id.startsWith('user-demo-') && password === 'cerdas123456');
@@ -2083,7 +2147,23 @@ async function handleApi(req, res, url, user) {
   sendJson(res, 404, { error: 'Rute API tidak ditemukan.' });
 }
 
-const frontendDir = path.resolve(__dirname, '../../frontend');
+function resolveFrontendDir() {
+  const candidates = [
+    path.resolve(__dirname, '../../frontend'),
+    path.resolve(__dirname, '../../public'),
+    path.resolve(process.cwd(), 'frontend'),
+    path.resolve(process.cwd(), 'public'),
+  ];
+  for (const c of candidates) {
+    try {
+      if (require('node:fs').existsSync(path.join(c, 'index.html'))) {
+        return c;
+      }
+    } catch {}
+  }
+  return candidates[0];
+}
+const frontendDir = resolveFrontendDir();
 const mimeTypes = {
   '.html': 'text/html; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
@@ -2170,7 +2250,7 @@ async function serveFrontend(req, res, url) {
   }
 }
 
-const server = http.createServer(async (req, res) => {
+async function requestListener(req, res) {
   const requestId = crypto.randomUUID();
   const startedAt = Date.now();
   metrics.requests += 1;
@@ -2203,6 +2283,7 @@ const server = http.createServer(async (req, res) => {
     origin === `https://${host}` ||
     (forwardedHost && (origin === `http://${forwardedHost}` || origin === `https://${forwardedHost}`)) ||
     origin.endsWith('.run.app') ||
+    origin.endsWith('.vercel.app') ||
     origin.includes('localhost') ||
     origin.includes('127.0.0.1') ||
     process.env.NODE_ENV !== 'production';
@@ -2242,7 +2323,9 @@ const server = http.createServer(async (req, res) => {
     if (!error.status || error.status >= 500) console.error(JSON.stringify({ level: 'error', event: 'api_error', requestId, message: error.message }));
     if (!res.headersSent) sendJson(res, error.status || 500, { error: error.status ? error.message : 'Terjadi kesalahan pada server.' });
   }
-});
+}
+
+const server = http.createServer(requestListener);
 
 server.timeout = REQUEST_TIMEOUT_MS;
 server.requestTimeout = REQUEST_TIMEOUT_MS;
@@ -2399,11 +2482,15 @@ async function seedDemoAccounts() {
   if (changed) await persistStore();
 }
 
-async function start() {
+async function startInitialization() {
   await Promise.all([loadStore(), contentStore.load()]);
   await seedAdmin();
   await seedDeveloper();
   await seedDemoAccounts();
+}
+
+async function start() {
+  await startInitialization();
   const host = process.env.HOST || '0.0.0.0';
   server.listen(port, host, () => console.log(JSON.stringify({ level: 'info', event: 'service_started', service: 'cerdas-cermat-app', host, port, storage: databasePool ? 'postgres' : 'json-local' })));
 }
@@ -2413,4 +2500,4 @@ if (require.main === module) start().catch((error) => {
   process.exitCode = 1;
 });
 
-module.exports = { server, start, handleApi, validateCatalog, serveFrontend };
+module.exports = { server, start, handleApi, validateCatalog, serveFrontend, requestListener, startInitialization };

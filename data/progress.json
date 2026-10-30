@@ -56,8 +56,29 @@
       "salt": "d7dc7b727b13e8fb01c689a0c6433741",
       "passwordHash": "3997134d8865b002fc005dbe0476f8ba205c46ab3704224b653c4366cb13f9737166012102dd8ef8d12c9193f6fb246c79dda50939d69ecb8780c14de820a416",
       "createdAt": "2026-10-27T01:45:46.600Z"
+    },
+    "user-fcdbbd5d-6cc8-4eec-9cd8-b48186c037a3": {
+      "id": "user-fcdbbd5d-6cc8-4eec-9cd8-b48186c037a3",
+      "email": "siswa.baru@contoh.id",
+      "name": "Siswa Baru",
+      "role": "student_sd",
+      "salt": "fb934fcc46c2c60a42f90cdc7bfc05d7",
+      "passwordHash": "a64d4120bf13c12cab92203ed5464c8408a53ec5ef62e3fc342cdab9bfadbaa4ebb5e7665ce4dd761d085362e5354023a066953d4388befad763104cb0cdf3be",
+      "createdAt": "2026-10-30T01:38:46.995Z"
     }
   },
   "classes": {},
-  "bankQuestions": []
+  "bankQuestions": [],
+  "sessions": {
+    "q-JkA3zPhlK-biX2XOgTneaXFpeCG2WRVb7shiuWVFw": {
+      "userId": "user-fcdbbd5d-6cc8-4eec-9cd8-b48186c037a3",
+      "email": "siswa.baru@contoh.id",
+      "expiresAt": 1795916326997
+    },
+    "fNLk09tGjQ7KHFyRjltEQxkP7Ef6lQvdyy-PvXYX61g": {
+      "userId": "user-fcdbbd5d-6cc8-4eec-9cd8-b48186c037a3",
+      "email": "siswa.baru@contoh.id",
+      "expiresAt": 1795916327078
+    }
+  }
 }

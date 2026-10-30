@@ -1116,6 +1116,10 @@ function openAccountDialog() {
   $('#account-email').disabled = false;
   $('#account-email').required = true;
   $('#account-email').readOnly = false;
+  const savedEmail = localStorage.getItem('cerdas-cermat-saved-email');
+  if (savedEmail && !$('#account-email').value) {
+    $('#account-email').value = savedEmail;
+  }
 
   const hintEl = $('#account-email-hint');
   if (hintEl) hintEl.hidden = !isRegister;
@@ -1519,6 +1523,9 @@ async function establishSession(data) {
   state.studentId = data.user.id;
   localStorage.setItem('cerdas-cermat-token', state.token);
   localStorage.setItem('cerdas-cermat-account', JSON.stringify(state.account));
+  if (data.user?.email) {
+    localStorage.setItem('cerdas-cermat-saved-email', data.user.email);
+  }
   localStorage.removeItem('cerdas-cermat-logged-out');
   state.progress = readProgress();
   state.progressSnapshot = null;
@@ -1596,6 +1603,7 @@ async function submitAccount(event) {
     $('#account-error').textContent = 'Email dan kata sandi wajib diisi.';
     return;
   }
+  localStorage.setItem('cerdas-cermat-saved-email', email);
 
   const body = { email, password };
   if (registering) {
@@ -2098,17 +2106,24 @@ async function init() {
       await loadApplication();
       void flushOfflineQueue();
       return;
-    } catch {
-      if (!navigator.onLine && state.account?.id) {
-        const mainEl = $('main');
-        if (mainEl) mainEl.inert = false;
-        updateAccountControls();
-        await loadApplication();
-        return;
+    } catch (err) {
+      if (err?.status === 401 || err?.status === 403) {
+        state.token = ''; state.account = null;
+        localStorage.removeItem('cerdas-cermat-token'); localStorage.removeItem('cerdas-cermat-account');
+        state.studentId = ''; state.progress = {};
+      } else {
+        const cachedAccount = JSON.parse(localStorage.getItem('cerdas-cermat-account') || 'null');
+        if (cachedAccount?.id) {
+          state.account = cachedAccount;
+          state.studentId = cachedAccount.id;
+          state.progress = readProgress();
+          const mainEl = $('main');
+          if (mainEl) mainEl.inert = false;
+          updateAccountControls();
+          await loadApplication();
+          return;
+        }
       }
-      state.token = ''; state.account = null;
-      localStorage.removeItem('cerdas-cermat-token'); localStorage.removeItem('cerdas-cermat-account');
-      state.studentId = ''; state.progress = {};
     }
   }
 
