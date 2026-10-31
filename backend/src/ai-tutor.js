@@ -86,6 +86,13 @@ async function getTutorExplanation({ questionId, prompt, choices, answer, choice
     return { ...aiCache.get(cacheKey), cached: true };
   }
 
+  if (process.env.NODE_ENV === 'test') {
+    const fallback = generatePedagogicalFallback({ prompt, choices, answer, explanation }, choice, subject, level);
+    aiCache.set(cacheKey, fallback);
+    void persistAiCache();
+    return fallback;
+  }
+
   const ai = getGenAiClient();
   if (!ai) {
     const fallback = generatePedagogicalFallback({ prompt, choices, answer, explanation }, choice, subject, level);
@@ -124,7 +131,7 @@ Pilihan siswa: ${chosenText}
 Kunci jawaban: ${correctText}
 Pembahasan bawaan: ${explanation || '-'}`;
 
-    const response = await ai.models.generateContent({
+    const generatePromise = ai.models.generateContent({
       model: 'gemini-3.8-flash',
       contents: userPrompt,
       config: {
@@ -132,6 +139,12 @@ Pembahasan bawaan: ${explanation || '-'}`;
         responseMimeType: 'application/json',
       },
     });
+
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('AI generation timed out')), 5000)
+    );
+
+    const response = await Promise.race([generatePromise, timeoutPromise]);
 
     const parsed = JSON.parse(response.text.trim());
     const result = {

@@ -30,6 +30,8 @@ function copyRecursive(src, dest) {
 try {
   copyRecursive(frontendDir, publicDir);
   console.log('[Build] Berhasil menyalin berkas statis frontend ke direktori public/ untuk Vercel CDN.');
+  // Salin index.html ke root untuk kompatibilitas deployment fallback
+  fs.copyFileSync(path.join(frontendDir, 'index.html'), path.join(rootDir, 'index.html'));
 } catch (err) {
   console.error('[Build] Peringatan saat menyalin frontend ke public:', err.message);
 }

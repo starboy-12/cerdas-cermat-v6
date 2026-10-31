@@ -1155,7 +1155,8 @@ function openAccountDialog() {
     $('#account-mode-toggle').innerHTML = 'Belum punya akun? <span>Buat akun</span>';
   }
 
-  dialog.classList.toggle('auth-required', false);
+  dialog.classList.toggle('auth-required', Boolean(state.authRequired));
+  $('#close-account').hidden = Boolean(state.authRequired);
   dialog.classList.add('is-open');
   dialog.setAttribute('aria-hidden', 'false');
 
@@ -1389,6 +1390,7 @@ async function submitResetVerify(event) {
 }
 
 function closeAccountDialog() {
+  if (state.authRequired) return;
   const dialog = $('#account-dialog');
   dialog.classList.remove('is-open');
   dialog.setAttribute('aria-hidden', 'true');
@@ -1718,10 +1720,10 @@ async function logoutAccount() {
   state.studentId = '';
   state.progress = {};
   state.progressSnapshot = null;
-  state.authRequired = false;
+  state.authRequired = true;
   state.appLoaded = false;
   const mainEl = $('main');
-  if (mainEl) mainEl.inert = false;
+  if (mainEl) mainEl.inert = true;
   state.accountMode = 'login';
   updateAccountControls();
   await loadApplication();
@@ -2127,12 +2129,12 @@ async function init() {
     }
   }
 
-  // Sesi belum aktif (tamu / pengunjung baru): jangan aktifkan akun developer secara otomatis
-  state.authRequired = false;
+  // Sesi belum aktif: buka modal login/daftar dan jadikan main inert
+  state.authRequired = true;
   const mainEl = $('main');
-  if (mainEl) mainEl.inert = false;
+  if (mainEl) mainEl.inert = true;
   updateAccountControls();
-  await loadApplication();
+  openAccountDialog();
 }
 
 init();
